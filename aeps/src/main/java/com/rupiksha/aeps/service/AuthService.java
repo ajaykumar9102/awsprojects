@@ -12,7 +12,13 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
+    // signup
     public User signup(SignupRequest request){
+
+        // Check if user already exists
+        if(userRepository.existsByMobile(request.getMobile())){
+            throw new RuntimeException("User already exists");
+        }
 
         User user = new User();
 
@@ -22,12 +28,13 @@ public class AuthService {
         user.setDob(request.getDob());
 
         return userRepository.save(user);
-
     }
 
+    // check user exists
     public boolean userExists(String mobile){
 
-        return userRepository.findByMobile(mobile).isPresent();
+        return userRepository.existsByMobile(mobile);
 
     }
+
 }
