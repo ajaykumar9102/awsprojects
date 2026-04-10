@@ -10,4 +10,6 @@ public interface AgentProfileRepository
 
     Optional<AgentProfile> findByMobile(String mobile);
 
+    boolean existsByMobile(String mobile);   // ✅ add this
+
 }
