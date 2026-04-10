@@ -17,7 +17,7 @@ public class AuthService {
 
         // Check if user already exists
         if(userRepository.existsByMobile(request.getMobile())){
-            throw new RuntimeException("User already exists");
+            return null;
         }
 
         User user = new User();

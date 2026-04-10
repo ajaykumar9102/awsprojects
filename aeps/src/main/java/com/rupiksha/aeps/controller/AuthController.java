@@ -1,6 +1,7 @@
 package com.rupiksha.aeps.controller;
 
 import com.rupiksha.aeps.dto.*;
+import com.rupiksha.aeps.entity.User;
 import com.rupiksha.aeps.service.AuthService;
 import com.rupiksha.aeps.service.OtpService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,11 @@ public class AuthController {
     @PostMapping("/signup")
     public AuthResponse signup(@RequestBody SignupRequest request){
 
-        authService.signup(request);
+        User user = authService.signup(request);
+
+        if(user == null){
+            return new AuthResponse("User already exists", false);
+        }
 
         otpService.generateOtp(request.getMobile());
 
