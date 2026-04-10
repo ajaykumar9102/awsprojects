@@ -18,16 +18,35 @@ public class AgentProfileService {
         return repository.findByMobile(profile.getMobile())
                 .map(existing -> {
 
-                    existing.setAgentId(profile.getAgentId());
-                    existing.setMerchantId(profile.getMerchantId());
-                    existing.setName(profile.getName());
-                    existing.setShopName(profile.getShopName());
-                    existing.setAddress(profile.getAddress());
-                    existing.setCity(profile.getCity());
-                    existing.setState(profile.getState());
-                    existing.setPinCode(profile.getPinCode());
-                    existing.setLatitude(profile.getLatitude());
-                    existing.setLongitude(profile.getLongitude());
+                    if(profile.getAgentId()!=null)
+                        existing.setAgentId(profile.getAgentId());
+
+                    if(profile.getMerchantId()!=null)
+                        existing.setMerchantId(profile.getMerchantId());
+
+                    if(profile.getName()!=null)
+                        existing.setName(profile.getName());
+
+                    if(profile.getShopName()!=null)
+                        existing.setShopName(profile.getShopName());
+
+                    if(profile.getAddress()!=null)
+                        existing.setAddress(profile.getAddress());
+
+                    if(profile.getCity()!=null)
+                        existing.setCity(profile.getCity());
+
+                    if(profile.getState()!=null)
+                        existing.setState(profile.getState());
+
+                    if(profile.getPinCode()!=null)
+                        existing.setPinCode(profile.getPinCode());
+
+                    if(profile.getLatitude()!=null)
+                        existing.setLatitude(profile.getLatitude());
+
+                    if(profile.getLongitude()!=null)
+                        existing.setLongitude(profile.getLongitude());
 
                     return repository.save(existing);
 
