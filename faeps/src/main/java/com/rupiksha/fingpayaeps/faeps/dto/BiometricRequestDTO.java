@@ -30,6 +30,7 @@ public class BiometricRequestDTO {
     @JsonProperty("cardnumberORUID")
     private P2CardnumberORUID cardnumberORUID;
 
+    // 🔥🔥🔥 MOST IMPORTANT FIX
     @JsonProperty("captureResponse")
-    private CaptureResponse captureResponse;
+    private String captureResponse;
 }

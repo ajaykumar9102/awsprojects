@@ -21,6 +21,7 @@ public class EncryptionUtil {
 
     private static final Logger log = LoggerFactory.getLogger(EncryptionUtil.class);
 
+    private static final String PROVIDER = "BC";
     private static final String RSA_ALGO = "RSA/ECB/PKCS1Padding";
     private static final String AES_ALGO = "AES/ECB/PKCS5Padding";
 
@@ -30,12 +31,11 @@ public class EncryptionUtil {
         try {
             Security.addProvider(new BouncyCastleProvider());
 
-            InputStream is = new ClassPathResource("fingpay_public.cer").getInputStream();
-
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(is);
-
-            PUBLIC_KEY = (RSAPublicKey) cert.getPublicKey();
+            try (InputStream is = new ClassPathResource("fingpay_public.cer").getInputStream()) {
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                X509Certificate cert = (X509Certificate) cf.generateCertificate(is);
+                PUBLIC_KEY = (RSAPublicKey) cert.getPublicKey();
+            }
 
             log.info("✅ Fingpay Public Key Loaded");
 
@@ -45,35 +45,24 @@ public class EncryptionUtil {
         }
     }
 
-    // 🔐 AES KEY GENERATION
+    // 🔐 AES SESSION KEY (128-bit)
     public static SecretKey generateSessionKey() {
         try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES", PROVIDER);
             keyGen.init(128);
-            SecretKey key = keyGen.generateKey();
-
-            log.debug("🔑 AES Session Key Generated");
-
-            return key;
-
+            return keyGen.generateKey();
         } catch (Exception e) {
             log.error("❌ AES key generation failed", e);
             throw new RuntimeException(e);
         }
     }
 
-    // 🔐 HASH (SHA256 → BASE64)
+    // 🔐 HASH (SHA-256 → Base64)
     public static String generateHash(String json) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance("SHA-256", PROVIDER);
             byte[] hash = digest.digest(json.getBytes(StandardCharsets.UTF_8));
-
-            String base64 = Base64.getEncoder().encodeToString(hash);
-
-            log.debug("🔐 Hash Generated");
-
-            return base64;
-
+            return Base64.getEncoder().encodeToString(hash);
         } catch (Exception e) {
             log.error("❌ Hash generation failed", e);
             throw new RuntimeException(e);
@@ -83,16 +72,12 @@ public class EncryptionUtil {
     // 🔐 AES ENCRYPT BODY
     public static String encryptBody(String json, SecretKey key) {
         try {
-            Cipher cipher = Cipher.getInstance(AES_ALGO);
+            Cipher cipher = Cipher.getInstance(AES_ALGO, PROVIDER);
             cipher.init(Cipher.ENCRYPT_MODE, key);
 
             byte[] encrypted = cipher.doFinal(json.getBytes(StandardCharsets.UTF_8));
 
-            String base64 = Base64.getEncoder().encodeToString(encrypted);
-
-            log.debug("🔐 Body Encrypted");
-
-            return base64;
+            return Base64.getEncoder().encodeToString(encrypted);
 
         } catch (Exception e) {
             log.error("❌ AES encryption failed", e);
@@ -103,16 +88,12 @@ public class EncryptionUtil {
     // 🔐 RSA ENCRYPT (SESSION KEY → ESKEY)
     public static String generateEskey(SecretKey key) {
         try {
-            Cipher cipher = Cipher.getInstance(RSA_ALGO);
+            Cipher cipher = Cipher.getInstance(RSA_ALGO, PROVIDER);
             cipher.init(Cipher.ENCRYPT_MODE, PUBLIC_KEY);
 
             byte[] encrypted = cipher.doFinal(key.getEncoded());
 
-            String base64 = Base64.getEncoder().encodeToString(encrypted);
-
-            log.debug("🔐 eskey Generated");
-
-            return base64;
+            return Base64.getEncoder().encodeToString(encrypted);
 
         } catch (Exception e) {
             log.error("❌ RSA encryption failed", e);
@@ -120,7 +101,7 @@ public class EncryptionUtil {
         }
     }
 
-    // 🔥 FULL FLOW HELPER (OPTIONAL BUT POWERFUL)
+    // 🔥 COMPLETE FLOW HELPER
     public static EncryptionResult encryptRequest(String json) {
 
         SecretKey sessionKey = generateSessionKey();
@@ -132,7 +113,7 @@ public class EncryptionUtil {
         return new EncryptionResult(hash, eskey, encryptedBody);
     }
 
-    // 🔥 HELPER CLASS
+    // 🔥 RESPONSE HOLDER
     public static class EncryptionResult {
         private final String hash;
         private final String eskey;

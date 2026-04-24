@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rupiksha.fingpayaeps.faeps.dto.*;
 import com.rupiksha.fingpayaeps.faeps.util.AadhaarValidator;
 import com.rupiksha.fingpayaeps.faeps.util.EncryptionUtil;
-import com.rupiksha.fingpayaeps.faeps.util.PidXmlParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 
 @Service
@@ -54,29 +54,24 @@ public class BiometricService {
         card.setIndicatorforUID(Integer.parseInt(frontendReq.getIndicatorforUID()));
         card.setNationalBankIdentificationNumber(frontendReq.getNationalBankIdentificationNumber());
 
-        // 🔥 XML → OBJECT
-        CaptureResponse capture = PidXmlParser.parse(frontendReq.getPidXml());
+        // 🔥 IMPORTANT FIX: XML ko directly use karo (NO PARSING)
+        String pidXml = frontendReq.getPidXml();
 
-        // 🔍 DEBUG
+        // 🔍 DEBUG (safe preview only)
         log.info("========== BIOMETRIC DEBUG ==========");
         log.info("Aadhaar: ****{}", frontendReq.getAadhaarNumber().substring(8));
-        log.info("errCode: {}", capture.getErrCode());
-        log.info("fType: {}", capture.getFType());
-        log.info("iCount: {}", capture.getICount());
-        log.info("qScore: {}", capture.getQScore());
-        log.info("HMAC: {}", capture.getHmac() != null ? "PRESENT" : "MISSING");
-        log.info("SessionKey: {}", capture.getSessionKey() != null ? "PRESENT" : "MISSING");
+        log.info("PID XML: {}", pidXml != null && pidXml.length() > 100 ? pidXml.substring(0, 100) + "..." : pidXml);
         log.info("=====================================");
 
         // ✅ REQUEST BUILD
         BiometricRequestDTO req = BiometricRequestDTO.builder()
-                .merchantLoginId(frontendReq.getMerchantLoginId()) // 🔥 dynamic
+                .merchantLoginId(frontendReq.getMerchantLoginId())
                 .superMerchantId(superMerchantId)
                 .primaryKeyId(frontendReq.getPrimaryKeyId())
                 .encodeFPTxnId(frontendReq.getEncodeFPTxnId())
                 .requestRemarks("ekyc")
                 .cardnumberORUID(card)
-                .captureResponse(capture)
+                .captureResponse(pidXml) // 🔥 FINAL FIX
                 .build();
 
         return processBiometric(req);
@@ -133,7 +128,12 @@ public class BiometricService {
 
             log.info("➡️ API CALL: {}", biometricUrl);
 
-            HttpEntity<String> entity = new HttpEntity<>(enc.getBody(), headers);
+            // 🔥 IMPORTANT FIX: BODY FORMAT
+            String finalRequestBody = mapper.writeValueAsString(
+                    Collections.singletonMap("data", enc.getBody())
+            );
+
+            HttpEntity<String> entity = new HttpEntity<>(finalRequestBody, headers);
 
             // =========================
             // 🚀 API CALL
@@ -170,12 +170,11 @@ public class BiometricService {
             log.info("StatusCode: {}", fingpay.getStatusCode());
             log.info("=====================================");
 
-            // 🔥 FINAL CONDITION FIX
             if (fingpay.isStatus() && fingpay.getStatusCode() == 10000) {
                 return BiometricResponseDTO.success(
                         null,
                         fingpay.getMessage(),
-                        rawResponse   // ✅ IMPORTANT
+                        rawResponse
                 );
             } else {
                 return BiometricResponseDTO.error(

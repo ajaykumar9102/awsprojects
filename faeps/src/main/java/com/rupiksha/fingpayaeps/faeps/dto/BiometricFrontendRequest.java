@@ -9,28 +9,30 @@ import lombok.Data;
 @Data
 public class BiometricFrontendRequest {
 
-    @NotBlank
-    private String merchantLoginId; // ✅ NEW (multi-user support)
+    @NotBlank(message = "Merchant Login ID is required")
+    private String merchantLoginId;
 
-    @NotBlank
+    @NotBlank(message = "Aadhaar is required")
     @Pattern(regexp = "\\d{12}", message = "Aadhaar must be 12 digits")
     private String aadhaarNumber;
 
-    // ✅ FIXED (ONLY 0 or 2) → keep STRING (since frontend भेज रहा है)
-    @NotBlank
-    @Pattern(regexp = "[02]", message = "indicator must be 0 or 2")
+    // ✅ STRING रखना सही है (frontend से आ रहा है)
+    @NotBlank(message = "Indicator is required")
+    @Pattern(regexp = "[02]", message = "indicator must be 0 (Aadhaar) or 2 (VID)")
     private String indicatorforUID;
 
-    @NotBlank
+    @NotBlank(message = "IIN (Bank code) is required")
+    @Pattern(regexp = "\\d{6}", message = "IIN must be 6 digits")
     private String nationalBankIdentificationNumber;
 
-    @NotNull
+    @NotNull(message = "PrimaryKeyId is required")
     private Integer primaryKeyId;
 
-    @NotBlank
+    @NotBlank(message = "encodeFPTxnId is required")
     private String encodeFPTxnId;
 
-    @NotBlank
-    @Size(min = 500, message = "PID XML too small")
+    // 🔥 IMPORTANT: PID XML validation
+    @NotBlank(message = "PID XML is required")
+    @Size(min = 100, message = "Invalid PID XML (too small)")
     private String pidXml;
 }

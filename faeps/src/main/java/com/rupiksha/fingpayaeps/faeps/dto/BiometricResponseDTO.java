@@ -19,30 +19,38 @@ public class BiometricResponseDTO<T> {
     private boolean success;
     private String message;
     private T data;
+
+    // 🔥 OPTIONAL (debugging ke liye useful)
     private String rawResponse;
+
     private String timestamp;
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
-    // ✅ SUCCESS (UPDATED)
+    // ✅ SUCCESS
     public static <T> BiometricResponseDTO<T> success(T data, String message, String rawResponse) {
         return BiometricResponseDTO.<T>builder()
                 .success(true)
                 .message(message)
                 .data(data)
-                .rawResponse(rawResponse) // ✅ FIXED
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .rawResponse(rawResponse) // optional
+                .timestamp(currentTime())
                 .build();
     }
 
-    // ✅ ERROR (ALREADY CORRECT)
+    // ✅ ERROR
     public static <T> BiometricResponseDTO<T> error(String message, String rawResponse) {
         return BiometricResponseDTO.<T>builder()
                 .success(false)
                 .message(message)
                 .rawResponse(rawResponse)
-                .timestamp(LocalDateTime.now().format(FORMATTER))
+                .timestamp(currentTime())
                 .build();
+    }
+
+    // 🔥 COMMON METHOD (code clean)
+    private static String currentTime() {
+        return LocalDateTime.now().format(FORMATTER);
     }
 }
