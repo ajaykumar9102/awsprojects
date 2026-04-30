@@ -1,0 +1,25 @@
+when we create new projects and new repo then 
+***************************************
+git init
+git add .
+git commit -m "msg"
+git remote add origin <repo-url>
+git branch -M main
+git push -u origin main
+***********************************
+Aws
+sudo apt update
+sudo apt install git -y
+sudo apt install maven -y
+sudo apt install openjdk-17-jdk -y
+git clone https://github.com/ajaykumar9102/awsprojects.git
+mvn clean package
+nohup java -jar target/kyc-0.0.1-SNAPSHOT.jar > kyc.log 2>&1 &
+tail -f kyc.log
+pkill -f kyc-0.0.1-SNAPSHOT.jar
+*********************************************
+
+Copy-Item -Recurse -Force "C:\Users\asus\Downloads\kyc" "C:\Users\asus\Downloads\awsprojects\"
+cd kyc
+mvn clean package
+nohup java -jar target/kyc-0.0.1-SNAPSHOT.jar > kyc.log 2>&1 &
